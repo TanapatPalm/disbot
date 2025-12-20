@@ -11,7 +11,7 @@ from myserver import server_on
 
 
 # ⚙️ CONFIGURATION 
-TOKEN = "MTQ1MDEzMzAyOTcyODI4ODc3OA.G_x6p8.bZRhr3gkrLfQ1_PQdbFVUVEcy9jJSgmowuopY0"
+
 GUILD_ID = 1450132671048056924          # ID เซิร์ฟเวอร์หลัก
 VERIFY_CHANNEL_ID =1450132709354635346  # ห้องสำหรับกดปุ่ม Verify
 ADMIN_CHANNEL_ID =1450134587991789680   # ห้อง Admin (สำหรับตรวจสลิป/แจ้งเตือน Security)
