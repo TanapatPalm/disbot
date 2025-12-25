@@ -155,7 +155,7 @@ html_template = """
                      style="left: {{ job.left }}%; width: {{ job.width }}%;"
                      title="Host: {{ job.host }} | ลูกค้า: {{ job.customer }}">
                     <div class="event-title">{{ job.service }}</div>
-                    <div class="event-time">⏰{{ job.start_str }}-{{ job.end_str }}</div>
+                    <div class="event-time">{{ job.start_str }}-{{ job.end_str }}</div>
                     <div class="event-time">👤 {{ job.host }}</div>
                 </div>
                 {% endfor %}
@@ -235,5 +235,8 @@ def index():
         jobs_data=jobs_data
     )
 
-if __name__ == '__main__':
-    app.run(debug=True, port=5000)
+#if __name__ == '__main__':
+#    app.run(debug=True, port=5000)
+
+def run():
+    app.run(host='0.0.0.0', port=5000, debug=False)
