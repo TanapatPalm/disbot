@@ -21,12 +21,12 @@ print("✅ Web Dashboard Online at http://127.0.0.1:5000")
 #TOKEN = ""
 DATABASE_URL = "postgresql://neondb_owner:npg_68PLfNBHGclV@ep-wispy-field-ahi0no35-pooler.c-3.us-east-1.aws.neon.tech/neondb?sslmode=require"
 
-GUILD_ID = 1450132671048056924
-VERIFY_CHANNEL_ID = 1450132709354635346
-ADMIN_CHANNEL_ID = 1450134587991789680
-DASHBOARD_CHANNEL_ID = 1450134627376168992
-VERIFIED_ROLE_ID = 1450138205167816795
-New_Verification = 1450432424734359593
+GUILD_ID = 1450065189138599961
+VERIFY_CHANNEL_ID = 1453767775771426850
+#ADMIN_CHANNEL_ID = 
+#DASHBOARD_CHANNEL_ID = 
+#VERIFIED_ROLE_ID = 
+New_Verification = 1453767810118582293
 
 SERVICES_CONFIG = {
     "g":   {"name": " kuy ", "price": 100},
@@ -524,4 +524,5 @@ async def finish_job(interaction: discord.Interaction, job_id: int):
 
 server_on()
 #bot.run(TOKEN)
+
 bot.run(os.getenv('TOKEN'))
