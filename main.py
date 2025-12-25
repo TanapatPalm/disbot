@@ -107,7 +107,7 @@ class VerifyModal(discord.ui.Modal, title="📝 แบบฟอร์มยื�
         # ส่ง Log (เหมือนเดิม)
         log_channel = interaction.guild.get_channel(New_Verification) 
         if log_channel:
-            embed = discord.Embed(title="📝 ได้รับยศเรียบร้อย", color=discord.Color.green())
+            embed = discord.Embed(title="📝『 ✧  𝔀𝓮𝓵𝓬𝓸𝓶𝓮 ✧ 』", color=discord.Color.green())
             embed.set_thumbnail(url=interaction.user.avatar.url if interaction.user.avatar else None)
             embed.add_field(name="╰┈➤User", value=f"{interaction.user.mention}", inline=False)
             embed.add_field(name="╰┈➤Name", value=self.name.value, inline=True)
@@ -116,7 +116,7 @@ class VerifyModal(discord.ui.Modal, title="📝 แบบฟอร์มยื�
             embed.add_field(name="╰┈➤Gender", value=self.sex_id.value, inline=False)
             embed.set_footer(text=f"User ID: {interaction.user.id}")
             embed.timestamp = datetime.datetime.now()
-            await log_channel.send(content=f"{interaction.user.mention} 『 ✧  𝔀𝓮𝓵𝓬𝓸𝓶𝓮 ✧ 』" , embed=embed)
+            await log_channel.send(content=f"{interaction.user.mention} ได้รับยศเรียบร้อย" , embed=embed)
 
 class VerifyButton(discord.ui.View):
     def __init__(self):
@@ -526,5 +526,6 @@ server_on()
 #bot.run(TOKEN)
 
 bot.run(os.getenv('TOKEN'))
+
 
 
