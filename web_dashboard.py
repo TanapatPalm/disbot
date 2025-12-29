@@ -1,3 +1,4 @@
+import os
 from flask import Flask, render_template_string
 import sqlite3
 import datetime
@@ -240,7 +241,8 @@ def index():
 #    app.run(debug=True, port=5000)
 
 def run():
-    port = int(os.environ.get("PORT", 5000))
+    port = int(os.environ.get("PORT", 5000)) # <--- สำคัญมาก! รับ Port จาก Render
     app.run(host='0.0.0.0', port=port, debug=False)
+
 
 
