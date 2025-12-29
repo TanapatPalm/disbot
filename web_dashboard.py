@@ -172,9 +172,11 @@ html_template = """
 </html>
 """
 
+# ... (ส่วน import และ HTML เหมือนเดิม) ...
+
 @app.route('/')
 def index():
-    # 1. ตั้งค่าเวลา (20:00 - 03:00)
+    # 1. ตั้งค่าเวลา (เหมือนเดิม)
     now = datetime.datetime.now()
     if now.hour < 12:
         base_time = (now - datetime.timedelta(days=1)).replace(hour=20, minute=0, second=0, microsecond=0)
@@ -189,46 +191,69 @@ def index():
         t = base_time + datetime.timedelta(hours=i)
         time_labels.append(t.strftime("%H:00"))
 
-    # 2. ดึงข้อมูล
-    conn = sqlite3.connect('service_bot.db')
-    cursor = conn.cursor()
-    cursor.execute("SELECT room_name, host_name, customer_name, service_name, start_datetime, end_datetime FROM jobs WHERE status != 'Done'")
-    all_jobs = cursor.fetchall()
-    conn.close()
+    # ---------------------------------------------------------
+    # 2. ดึงข้อมูลจาก PostgreSQL (ใส่ระบบกัน Error)
+    # ---------------------------------------------------------
+    all_jobs = []
+    try:
+        # เชื่อมต่อ DB
+        conn = psycopg2.connect(DATABASE_URL)
+        cursor = conn.cursor()
+        cursor.execute("SELECT room_name, host_name, customer_name, service_name, start_datetime, end_datetime FROM jobs WHERE status != 'Done'")
+        all_jobs = cursor.fetchall()
+        cursor.close()
+        conn.close()
+        print(f"✅ Dashboard loaded: {len(all_jobs)} jobs found.") # Log บอกว่าโหลดได้
+    except Exception as e:
+        # ถ้าเชื่อมต่อไม่ได้ ให้ Log Error ออกมาดู แต่ห้ามทำให้เว็บล่ม
+        print(f"❌ DASHBOARD ERROR: {e}") 
+        # all_jobs จะเป็น list ว่าง [] ทำให้หน้าเว็บยังเปิดได้ (แค่ไม่มีข้อมูล)
 
-    # 3. คำนวณ
+    # 3. คำนวณ (เหมือนเดิม)
     room_list = [f"ห้อง {i}" for i in range(1, 7)]
     jobs_data = {r: [] for r in room_list}
 
-    for job in all_jobs:
-        r_name, h_name, c_name, s_name, start_str, end_str = job
-        start_dt = datetime.datetime.fromisoformat(start_str)
-        end_dt = datetime.datetime.fromisoformat(end_str)
+    # เพิ่มการเช็คว่ามีข้อมูลไหม
+    if all_jobs:
+        for job in all_jobs:
+            # ... (โค้ดคำนวณตำแหน่ง CSS เหมือนเดิม) ...
+            r_name, h_name, c_name, s_name, start_str, end_str = job
+            
+            # แปลง String เป็น Datetime (รองรับทั้ง str และ datetime obj)
+            if isinstance(start_str, str):
+                start_dt = datetime.datetime.fromisoformat(start_str)
+            else:
+                start_dt = start_str
 
-        if end_dt <= base_time or start_dt >= end_scope:
-            continue
+            if isinstance(end_str, str):
+                end_dt = datetime.datetime.fromisoformat(end_str)
+            else:
+                end_dt = end_str
 
-        start_offset = (start_dt - base_time).total_seconds() / 60
-        if start_offset < 0: start_offset = 0
-        end_offset = (end_dt - base_time).total_seconds() / 60
-        if end_offset > total_minutes: end_offset = total_minutes
-        
-        duration = end_offset - start_offset
-        if duration <= 0: continue
+            if end_dt <= base_time or start_dt >= end_scope:
+                continue
 
-        left_percent = (start_offset / total_minutes) * 100
-        width_percent = (duration / total_minutes) * 100
+            start_offset = (start_dt - base_time).total_seconds() / 60
+            if start_offset < 0: start_offset = 0
+            end_offset = (end_dt - base_time).total_seconds() / 60
+            if end_offset > total_minutes: end_offset = total_minutes
+            
+            duration = end_offset - start_offset
+            if duration <= 0: continue
 
-        if r_name in jobs_data:
-            jobs_data[r_name].append({
-                "service": s_name,
-                "host": h_name,
-                "customer": c_name,
-                "start_str": start_dt.strftime("%H:%M"),
-                "end_str": end_dt.strftime("%H:%M"),
-                "left": left_percent,
-                "width": width_percent
-            })
+            left_percent = (start_offset / total_minutes) * 100
+            width_percent = (duration / total_minutes) * 100
+
+            if r_name in jobs_data:
+                jobs_data[r_name].append({
+                    "service": s_name,
+                    "host": h_name,
+                    "customer": c_name,
+                    "start_str": start_dt.strftime("%H:%M"),
+                    "end_str": end_dt.strftime("%H:%M"),
+                    "left": left_percent,
+                    "width": width_percent
+                })
 
     return render_template_string(
         html_template,
@@ -237,12 +262,11 @@ def index():
         jobs_data=jobs_data
     )
 
-#if __name__ == '__main__':
-#    app.run(debug=True, port=5000)
-
 def run():
-    port = int(os.environ.get("PORT", 5000)) # <--- สำคัญมาก! รับ Port จาก Render
+    # รับ Port จาก Render
+    port = int(os.environ.get("PORT", 5000)) 
     app.run(host='0.0.0.0', port=port, debug=False)
+
 
 
 
