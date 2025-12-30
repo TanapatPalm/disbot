@@ -1,18 +1,19 @@
 from flask import Flask, render_template_string
-import sqlite3
+import psycopg2 
 import datetime
 import os
 
-
 app = Flask(__name__)
 
-# --- HTML Template (Big Size & Dark Mode) ---
+DATABASE_URL = "postgresql://neondb_owner:npg_68PLfNBHGclV@ep-wispy-field-ahi0no35-pooler.c-3.us-east-1.aws.neon.tech/neondb?sslmode=require"
+
+
 html_template = """
 <!DOCTYPE html>
 <html lang="th">
 <head>
     <meta charset="UTF-8">
-    <title>Room</title>
+    <title>Room Schedule</title>
     <meta http-equiv="refresh" content="60">
     <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;600&display=swap" rel="stylesheet">
     <style>
@@ -23,7 +24,7 @@ html_template = """
             margin: 20px;
         }
         .container {
-            max_width: 1800px; /* ขยายความกว้างเป็น 1800px */
+            max_width: 1800px;
             margin: 0 auto;
             background-color: #313338; 
             box-shadow: 0 6px 10px rgba(0,0,0,0.4);
@@ -36,7 +37,7 @@ html_template = """
             padding: 25px;
             background-color: #313338;
             border-bottom: 2px solid #1e1f22;
-            font-size: 32px; /* หัวข้อใหญ่ขึ้น */
+            font-size: 32px;
             font-weight: bold;
             color: #f2f3f5;
             text-align: center;
@@ -44,16 +45,15 @@ html_template = """
 
         .schedule-table { display: flex; flex-direction: column; width: 100%; }
 
-        /* Header เวลา */
         .time-header {
             display: flex;
             border-bottom: 1px solid #1e1f22;
             background-color: #2b2d31;
-            height: 50px; /* สูงขึ้น */
+            height: 50px;
             line-height: 50px;
         }
         .room-label-header { 
-            width: 200px; /* ขยายช่องชื่อห้องเป็น 200px */
+            width: 200px;
             flex-shrink: 0; 
             border-right: 1px solid #1e1f22; 
             background-color: #2b2d31; 
@@ -62,26 +62,25 @@ html_template = """
         .time-slot-label { 
             flex: 1; 
             text-align: center; 
-            font-size: 18px; /* ตัวเลขเวลาใหญ่ขึ้น */
+            font-size: 18px;
             font-weight: bold;
             color: #949ba4; 
             border-right: 1px solid #1e1f22; 
         }
 
-        /* Row ห้อง */
         .room-row {
             display: flex;
-            height: 120px; /* ขยายความสูงแถวห้องเป็น 120px (ใหญ่สะใจ) */
+            height: 120px;
             border-bottom: 1px solid #1e1f22;
             position: relative;
         }
         .room-label {
-            width: 200px; /* ขยายช่องชื่อห้องเป็น 200px */
+            width: 200px;
             flex-shrink: 0;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 24px; /* ชื่อห้องตัวใหญ่มาก */
+            font-size: 24px;
             font-weight: bold;
             color: #f2f3f5;
             border-right: 1px solid #1e1f22;
@@ -95,13 +94,12 @@ html_template = """
             background-size: 14.28% 100%; 
         }
 
-        /* กล่องงาน (Big Block) */
         .event-block {
             position: absolute;
-            top: 20px; bottom: 20px; /* เว้นขอบบนล่าง 20px (กล่องจะสูง 80px) */
+            top: 20px; bottom: 20px;
             background-color: #248046; 
             border: 1px solid #1a6334;
-            border-radius: 8px; /* มุมมนขึ้น */
+            border-radius: 8px;
             color: #ffffff; 
             display: flex;
             flex-direction: column;
@@ -118,15 +116,15 @@ html_template = """
             z-index: 100;
             background-color: #2dc770; 
             cursor: pointer;
-            transform: scale(1.02); /* ขยายเล็กน้อยตอนชี้ */
+            transform: scale(1.02);
         }
         .event-title { 
             font-weight: bold; 
-            font-size: 18px; /* ชื่อบริการตัวใหญ่ */
+            font-size: 18px;
             margin-bottom: 4px;
         }
         .event-time { 
-            font-size: 14px; /* เวลาตัวใหญ่ขึ้น */
+            font-size: 14px;
             color: #e0e0e0; 
         }
         
@@ -135,7 +133,7 @@ html_template = """
 <body>
 
 <div class="container">
-    <div class="header-title">ตารางห้อง </div>
+    <div class="header-title">ตารางห้อง</div>
 
     <div class="schedule-table">
         <div class="time-header">
@@ -172,11 +170,8 @@ html_template = """
 </html>
 """
 
-# ... (ส่วน import และ HTML เหมือนเดิม) ...
-
 @app.route('/')
 def index():
-    # 1. ตั้งค่าเวลา (เหมือนเดิม)
     now = datetime.datetime.now()
     if now.hour < 12:
         base_time = (now - datetime.timedelta(days=1)).replace(hour=20, minute=0, second=0, microsecond=0)
@@ -191,35 +186,26 @@ def index():
         t = base_time + datetime.timedelta(hours=i)
         time_labels.append(t.strftime("%H:00"))
 
-    # ---------------------------------------------------------
-    # 2. ดึงข้อมูลจาก PostgreSQL (ใส่ระบบกัน Error)
-    # ---------------------------------------------------------
+  
     all_jobs = []
     try:
-        # เชื่อมต่อ DB
         conn = psycopg2.connect(DATABASE_URL)
         cursor = conn.cursor()
         cursor.execute("SELECT room_name, host_name, customer_name, service_name, start_datetime, end_datetime FROM jobs WHERE status != 'Done'")
         all_jobs = cursor.fetchall()
         cursor.close()
         conn.close()
-        print(f"✅ Dashboard loaded: {len(all_jobs)} jobs found.") # Log บอกว่าโหลดได้
+        print(f"✅ Dashboard loaded: {len(all_jobs)} jobs found.")
     except Exception as e:
-        # ถ้าเชื่อมต่อไม่ได้ ให้ Log Error ออกมาดู แต่ห้ามทำให้เว็บล่ม
-        print(f"❌ DASHBOARD ERROR: {e}") 
-        # all_jobs จะเป็น list ว่าง [] ทำให้หน้าเว็บยังเปิดได้ (แค่ไม่มีข้อมูล)
-
-    # 3. คำนวณ (เหมือนเดิม)
+        print(f"❌ DASHBOARD ERROR: {e}")
+    
     room_list = [f"ห้อง {i}" for i in range(1, 7)]
     jobs_data = {r: [] for r in room_list}
 
-    # เพิ่มการเช็คว่ามีข้อมูลไหม
     if all_jobs:
         for job in all_jobs:
-            # ... (โค้ดคำนวณตำแหน่ง CSS เหมือนเดิม) ...
             r_name, h_name, c_name, s_name, start_str, end_str = job
             
-            # แปลง String เป็น Datetime (รองรับทั้ง str และ datetime obj)
             if isinstance(start_str, str):
                 start_dt = datetime.datetime.fromisoformat(start_str)
             else:
@@ -263,12 +249,5 @@ def index():
     )
 
 def run():
-    # รับ Port จาก Render
     port = int(os.environ.get("PORT", 5000)) 
     app.run(host='0.0.0.0', port=port, debug=False)
-
-
-
-
-
-
