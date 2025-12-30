@@ -15,8 +15,8 @@ DATABASE_URL = "postgresql://neondb_owner:npg_68PLfNBHGclV@ep-wispy-field-ahi0no
 # ใส่ ID เซิร์ฟเวอร์และห้องต่างๆ ให้ถูกต้อง
 GUILD_ID = 1450065189138599961 
 VERIFY_CHANNEL_ID = 1453767810118582293
-#ADMIN_CHANNEL_ID = 1453767810118582293 # <-- อย่าลืมแก้เป็น ID ห้อง Admin
-#DASHBOARD_CHANNEL_ID = 1450134627376168992 # <-- อย่าลืมแก้เป็น ID ห้อง Dashboard
+ADMIN_CHANNEL_ID = 1453767810118582293 # <-- อย่าลืมแก้เป็น ID ห้อง Admin
+DASHBOARD_CHANNEL_ID = 1450134627376168992 # <-- อย่าลืมแก้เป็น ID ห้อง Dashboard
 VERIFIED_ROLE_ID = 1451068283691470970
 New_Verification = 1453767775771426850
 
@@ -428,3 +428,4 @@ async def finish_job(interaction: discord.Interaction, job_id: int):
 # รัน Server และ Bot
 server_on()
 bot.run(os.getenv('TOKEN'))
+
