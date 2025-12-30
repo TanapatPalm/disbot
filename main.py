@@ -2,13 +2,13 @@ import os
 import discord
 from discord import app_commands
 from discord.ext import commands, tasks
-import asyncpg # ใช้ asyncpg แทน aiosqlite
+import asyncpg 
 import datetime
 from datetime import timedelta
 import asyncio
 
-# ส่วน Server และ Web Dashboard (คงเดิม)
-from myserver import server_on
+
+#from myserver import server_on
 import threading
 import web_dashboard
 print("🌐 Starting Web Dashboard...")
@@ -522,10 +522,11 @@ async def finish_job(interaction: discord.Interaction, job_id: int):
     else:
         await interaction.response.send_message("❌ ไม่พบ Job ID นี้", ephemeral=True)
 
-server_on()
+#server_on()
 #bot.run(TOKEN)
 
 bot.run(os.getenv('TOKEN'))
+
 
 
 
