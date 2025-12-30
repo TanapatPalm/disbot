@@ -8,7 +8,7 @@ from datetime import timedelta
 import asyncio
 import threading
 import web_dashboard
-
+from web_dashboard import server_on
 # --- เริ่ม Web Dashboard ใน Thread แยก ---
 print("🌐 Starting Web Dashboard...")
 web_thread = threading.Thread(target=web_dashboard.run)
@@ -25,8 +25,8 @@ VERIFY_CHANNEL_ID = 1453767775771426850
 VERIFIED_ROLE_ID = 1451068283691470970
 New_Verification = 1453767810118582293
 # ADMIN_CHANNEL_ID และ DASHBOARD_CHANNEL_ID ต้องใส่เลข ID จริง
-ADMIN_CHANNEL_ID = 1453767810118582293 
-DASHBOARD_CHANNEL_ID = 1453767810118582293 
+#ADMIN_CHANNEL_ID = 1453767810118582293 
+#DASHBOARD_CHANNEL_ID = 1453767810118582293 
 
 SERVICES_CONFIG = {
     "g":   {"name": " kuy ", "price": 100},
@@ -503,3 +503,4 @@ async def finish_job(interaction: discord.Interaction, job_id: int):
 # 🚀 RUN BOT
 # ตรวจสอบว่าใน Render ตั้งค่า Environment Variable ชื่อ "TOKEN" ไว้หรือยังนะครับ
 bot.run(os.getenv('TOKEN'))
+
