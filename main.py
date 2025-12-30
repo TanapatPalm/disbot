@@ -6,27 +6,26 @@ import asyncpg
 import datetime
 from datetime import timedelta
 import asyncio
-
-
-#from myserver import server_on
 import threading
 import web_dashboard
+
+# --- เริ่ม Web Dashboard ใน Thread แยก ---
 print("🌐 Starting Web Dashboard...")
 web_thread = threading.Thread(target=web_dashboard.run)
 web_thread.daemon = True 
 web_thread.start()
-print("✅ Web Dashboard Online at http://127.0.0.1:5000")
+print("✅ Web Dashboard Online")
 
 # ⚙️ CONFIGURATION 
-#TOKEN = ""
+# TOKEN จะดึงจาก Environment Variable ตอนบรรทัดสุดท้าย
 DATABASE_URL = "postgresql://neondb_owner:npg_68PLfNBHGclV@ep-wispy-field-ahi0no35-pooler.c-3.us-east-1.aws.neon.tech/neondb?sslmode=require"
 
-GUILD_ID = 1450065189138599961
+GUILD_ID = 1450065189138599961 
 VERIFY_CHANNEL_ID = 1453767775771426850
-#ADMIN_CHANNEL_ID = 
-#DASHBOARD_CHANNEL_ID = 
 VERIFIED_ROLE_ID = 1451068283691470970
 New_Verification = 1453767810118582293
+#ADMIN_CHANNEL_ID = 1453767810118582293 
+#DASHBOARD_CHANNEL_ID = 1453767810118582293 
 
 SERVICES_CONFIG = {
     "g":   {"name": " kuy ", "price": 100},
@@ -40,16 +39,14 @@ SERVICES_CONFIG = {
 intents = discord.Intents.all()
 bot = commands.Bot(command_prefix="!", intents=intents)
 
-# 🗄️ DATABASE POOL (ตัวแปร Global สำหรับเชื่อมต่อฐานข้อมูล)
+# 🗄️ DATABASE POOL
 pool = None
 
 async def init_db():
     global pool
-    # สร้าง Connection Pool
     pool = await asyncpg.create_pool(dsn=DATABASE_URL)
     
     async with pool.acquire() as conn:
-        # สร้างตาราง jobs (ใช้ SERIAL แทน AUTOINCREMENT)
         await conn.execute("""
             CREATE TABLE IF NOT EXISTS jobs (
                 job_id SERIAL PRIMARY KEY,
@@ -65,7 +62,6 @@ async def init_db():
                 end_datetime TEXT
             )
         """)
-        # สร้างตาราง reviews
         await conn.execute("""
             CREATE TABLE IF NOT EXISTS reviews (
                 review_id SERIAL PRIMARY KEY,
@@ -85,18 +81,13 @@ class VerifyModal(discord.ui.Modal, title="📝 แบบฟอร์มยื�
     vrchat_id = discord.ui.TextInput(label="VR Name")
     age = discord.ui.TextInput(label="AGE (ไม่ระบุ = 0)",  max_length=2)
     sex_id = discord.ui.TextInput(label="Gender")
-    con_id = discord.ui.TextInput(label="Comfirm I Am 18+ and Agree To Rules (Y/N)", max_length=1 )
-
+    con_id = discord.ui.TextInput(label="Confirm I Am 18+ and Agree To Rules (Y/N)", max_length=1)
 
     async def on_submit(self, interaction: discord.Interaction):
-        # 1. เช็คเงื่อนไขก่อนเลย: ถ้าไม่ได้พิมพ์ Y หรือ y
-        # .upper() แปลงเป็นตัวพิมพ์ใหญ่ เพื่อให้รองรับทั้ง y และ Y
         if self.con_id.value.upper() != 'Y':
-            # แจ้งเตือนและจบการทำงานทันที (return)
-            await interaction.response.send_message("❌ **ยืนยันตัวตนไม่สำเร็จ**ต้องยอมรับกฎและยืนยันอายุ", ephemeral=True)
+            await interaction.response.send_message("❌ **ยืนยันตัวตนไม่สำเร็จ** ต้องยอมรับกฎและยืนยันอายุ", ephemeral=True)
             return 
 
-        # --- ถ้าพิมพ์ Y ผ่านลงมาทำงานส่วนนี้ (เหมือนเดิม) ---
         role = interaction.guild.get_role(VERIFIED_ROLE_ID)
         if role:
             await interaction.user.add_roles(role)
@@ -104,7 +95,6 @@ class VerifyModal(discord.ui.Modal, title="📝 แบบฟอร์มยื�
         else:
             await interaction.response.send_message("⚠️ Error: ไม่พบยศ Verified", ephemeral=True)
 
-        # ส่ง Log (เหมือนเดิม)
         log_channel = interaction.guild.get_channel(New_Verification) 
         if log_channel:
             embed = discord.Embed(title="📝『 ✧  𝔀𝓮𝓵𝓬𝓸𝓶𝓮 ✧ 』", color=discord.Color.green())
@@ -134,16 +124,13 @@ class VerifyButton(discord.ui.View):
 class HostJobView(discord.ui.View):
     def __init__(self, job_id):
         super().__init__(timeout=None)
-        self.job_id = job_id # รับ ID งานมาเก็บไว้
+        self.job_id = job_id 
 
     @discord.ui.button(label="รับงาน (Accept)", style=discord.ButtonStyle.success)
     async def accept(self, interaction: discord.Interaction, button: discord.ui.Button):
         global pool
         async with pool.acquire() as conn:
-            # ใช้ $1 แทน ?
             await conn.execute("UPDATE jobs SET status = 'WaitPayment' WHERE job_id = $1", self.job_id)
-            
-            # ดึงข้อมูลมาส่งบิล
             row = await conn.fetchrow("SELECT customer_id, service_name, price FROM jobs WHERE job_id = $1", self.job_id)
             
         if row:
@@ -152,9 +139,8 @@ class HostJobView(discord.ui.View):
             price = row['price']
 
             await interaction.response.send_message("✅ รับงานแล้ว! ระบบกำลังส่งบิลให้ลูกค้า...", ephemeral=True)
-            self.stop() # ปิดปุ่ม
+            self.stop() 
 
-            # ส่งบิลหาลูกค้า
             try:
                 customer = await interaction.client.fetch_user(customer_id)
                 if customer:
@@ -191,7 +177,6 @@ class AdminSlipView(discord.ui.View):
         await interaction.response.send_message(f"✅ อนุมัติ Job #{self.job_id} แล้ว!", ephemeral=True)
         self.stop()
 
-        # แจ้งเตือน
         guild = interaction.guild
         customer = guild.get_member(self.customer_id)
         host = guild.get_member(host_id) if host_id else None
@@ -240,7 +225,7 @@ class FeedbackView(discord.ui.View):
 
 @bot.event
 async def on_ready():
-    await init_db() # เริ่มเชื่อมต่อ DB
+    await init_db()
     bot.add_view(VerifyButton())
     await bot.tree.sync()
     
@@ -264,11 +249,9 @@ async def on_member_join(member):
 async def on_message(message):
     if message.author.bot: return
 
-    # เช็คสลิปใน DM
     if isinstance(message.channel, discord.DMChannel) and message.attachments:
         global pool
         async with pool.acquire() as conn:
-            # ค้นหางานที่สถานะ WaitPayment ของ User นี้
             row = await conn.fetchrow("SELECT job_id, price FROM jobs WHERE customer_id = $1 AND status = 'WaitPayment'", message.author.id)
         
         if row:
@@ -308,8 +291,6 @@ async def update_dashboard():
             WHERE status != 'Done'
         """)
 
-    # จัดกลุ่มงานใส่ห้อง
-    # ใช้ dictionary comprehension สร้างห้อง 1-6
     rooms_data = {f"ห้อง {i}": [] for i in range(1, 7)}
     ROOM_OPTIONS_LIST = [f"ห้อง {i}" for i in range(1, 7)]
 
@@ -324,7 +305,6 @@ async def update_dashboard():
                 "service": row['service_name'], "id": row['job_id']
             })
 
-    # สร้าง Embed
     start_label = start_display.strftime("%H:00")
     end_label = (start_display + datetime.timedelta(hours=hours_to_show)).strftime("%H:00")
     
@@ -387,14 +367,12 @@ async def check_schedule():
         customer = bot.get_user(row['customer_id'])
         host = bot.get_user(row['host_id'])
 
-        # แจ้งเตือนเริ่มงาน
         time_until_start = (start_dt - now).total_seconds() / 60
         if 14 <= time_until_start <= 16:
             msg = f"⏰ **แจ้งเตือน:** บริการ **{service}** จะเริ่มในอีก 15 นาที (Job #{job_id})"
             if customer: await customer.send(msg)
             if host: await host.send(msg)
 
-        # แจ้งเตือนจบงาน
         if status == 'Active':
             time_until_end = (end_dt - now).total_seconds() / 60
             if 4 <= time_until_end <= 6:
@@ -427,13 +405,10 @@ async def setup_verify(interaction: discord.Interaction):
     await interaction.response.send_message("ติดตั้งปุ่มเรียบร้อย!", ephemeral=True)
 
 
-# --- CREATE JOB (แก้ไขให้ Insert ทันทีเพื่อเอา job_id) ---
+# --- CREATE JOB (แก้ไขแล้ว) ---
 ROOM_OPTIONS = [f"ห้อง {i}" for i in range(1, 7)]
 
 @bot.tree.command(name="create_job")
-async def create_job(interaction: discord.Interaction):
-    if not interaction.user.guild_permissions.administrator:
-        return await interaction.response.send_message("❌ Admin Only", ephemeral=True)
 @app_commands.describe(
     customer="ลูกค้า", host="โฮสต์", 
     service_select="เลือกบริการ", room_select="เลือกห้อง",
@@ -453,6 +428,10 @@ async def create_job(
     room_select: app_commands.Choice[str],
     start_time: str, duration: int
 ):
+    # เช็คสิทธิ์ Admin ในฟังก์ชันนี้ฟังก์ชันเดียว
+    if not interaction.user.guild_permissions.administrator:
+        return await interaction.response.send_message("❌ Admin Only", ephemeral=True)
+
     selected_key = service_select.value
     service_info = SERVICES_CONFIG.get(selected_key)
     service_name = service_info["name"]
@@ -469,7 +448,6 @@ async def create_job(
     except ValueError:
         return await interaction.response.send_message("❌ เวลาผิดรูปแบบ", ephemeral=True)
 
-    # ✅ INSERT ทันทีเพื่อเอา Job ID และป้องกันข้อมูลหาย
     global pool
     async with pool.acquire() as conn:
         job_id = await conn.fetchval("""
@@ -482,7 +460,6 @@ async def create_job(
         """, customer.id, customer.name, host.id, host.name, 
            service_name, room_name, price, start_dt.isoformat(), end_dt.isoformat())
 
-    # แจ้งเตือน Host พร้อมปุ่มที่มี job_id
     embed = discord.Embed(title="🔔 มีงานเข้าใหม่ (New Job)", color=discord.Color.gold())
     embed.add_field(name="📍 สถานที่", value=f"**{room_name}**", inline=False)
     embed.add_field(name="บริการ", value=service_name, inline=True)
@@ -497,11 +474,11 @@ async def create_job(
 
 
 @bot.tree.command(name="finish_job")
-async def finish_job(interaction: discord.Interaction):
+async def finish_job(interaction: discord.Interaction, job_id: int):
+    # เช็คสิทธิ์ Admin
     if not interaction.user.guild_permissions.administrator:
         return await interaction.response.send_message("❌ Admin Only", ephemeral=True)
 
-async def finish_job(interaction: discord.Interaction, job_id: int):
     global pool
     async with pool.acquire() as conn:
         await conn.execute("UPDATE jobs SET status = 'Done' WHERE job_id = $1", job_id)
@@ -522,11 +499,6 @@ async def finish_job(interaction: discord.Interaction, job_id: int):
     else:
         await interaction.response.send_message("❌ ไม่พบ Job ID นี้", ephemeral=True)
 
-#server_on()
-#bot.run(TOKEN)
-
+# 🚀 RUN BOT
+# ตรวจสอบว่าใน Render ตั้งค่า Environment Variable ชื่อ "TOKEN" ไว้หรือยังนะครับ
 bot.run(os.getenv('TOKEN'))
-
-
-
-
