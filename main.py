@@ -6,18 +6,17 @@ import asyncpg
 import datetime
 from datetime import timedelta
 import asyncio
-from myserver import server_on
+from myserver import server_on # เรียกใช้ myserver ตัวใหม่
 
 # ⚙️ CONFIGURATION 
 DATABASE_URL = "postgresql://neondb_owner:npg_68PLfNBHGclV@ep-wispy-field-ahi0no35-pooler.c-3.us-east-1.aws.neon.tech/neondb?sslmode=require"
 
-# ใส่ ID ของคุณให้ถูกต้อง
-GUILD_ID = 1450065189138599961   
-VERIFY_CHANNEL_ID = 1453767775771426850
+GUILD_ID = 1450065189138599961 
+VERIFY_CHANNEL_ID = 1453767810118582293
 ADMIN_CHANNEL_ID = 1453767810118582293 
 DASHBOARD_CHANNEL_ID = 1450134627376168992 
 VERIFIED_ROLE_ID = 1451068283691470970
-New_Verification = 1453767810118582293
+New_Verification = 1453767775771426850
 
 SERVICES_CONFIG = {
     "g":   {"name": " kuy ", "price": 100},
@@ -389,16 +388,6 @@ async def finish_job(interaction: discord.Interaction, job_id: int):
     else:
         await interaction.response.send_message("❌ ไม่พบ Job ID นี้", ephemeral=True)
 
-# 🚀 RUN BOT
-server_on()
-# เช็ค TOKEN: ถ้าในเครื่องใช้ TOKEN จากตัวแปร, ถ้า Render ใช้ os.getenv
-token = os.getenv('TOKEN')
-if not token:
-    print("⚠️ Warning: TOKEN not found in env, checking hardcoded...")
-    # token = "TOKEN_ของ_คุณ" # ถ้าจะเทสในเครื่องก็เปิดตรงนี้ได้
-    
-if token:
-    bot.run(token)
-else:
-    print("❌ Error: No TOKEN found!")
-
+# 🚀 RUN BOT (เริ่มทำงาน)
+server_on() # เปิดเว็บ (myserver.py ที่รวม dashboard แล้ว)
+bot.run(os.getenv('TOKEN'))
