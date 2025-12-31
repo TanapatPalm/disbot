@@ -12,12 +12,12 @@ from myserver import server_on
 DATABASE_URL = "postgresql://neondb_owner:npg_68PLfNBHGclV@ep-wispy-field-ahi0no35-pooler.c-3.us-east-1.aws.neon.tech/neondb?sslmode=require"
 
 # ใส่ ID ของคุณให้ถูกต้อง
-GUILD_ID = 1450065189138599961 
-VERIFY_CHANNEL_ID = 1453767810118582293
+GUILD_ID = 1450065189138599961   
+VERIFY_CHANNEL_ID = 1453767775771426850
 ADMIN_CHANNEL_ID = 1453767810118582293 
 DASHBOARD_CHANNEL_ID = 1450134627376168992 
 VERIFIED_ROLE_ID = 1451068283691470970
-New_Verification = 1453767775771426850
+New_Verification = 1453767810118582293
 
 SERVICES_CONFIG = {
     "g":   {"name": " kuy ", "price": 100},
@@ -401,3 +401,4 @@ if token:
     bot.run(token)
 else:
     print("❌ Error: No TOKEN found!")
+
