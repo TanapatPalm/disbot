@@ -12,7 +12,7 @@ from myserver import server_on # เรียกใช้ myserver ตัวใ�
 DATABASE_URL = "postgresql://neondb_owner:npg_68PLfNBHGclV@ep-wispy-field-ahi0no35-pooler.c-3.us-east-1.aws.neon.tech/neondb?sslmode=require"
 
 GUILD_ID = 1450065189138599961 
-VERIFY_CHANNEL_ID = 1453767775771426850
+VERIFY_CHANNEL_ID = 1453767810118582293
 ADMIN_CHANNEL_ID = 1455208675000979647
 DASHBOARD_CHANNEL_ID = 1455208675000979647 
 VERIFIED_ROLE_ID = 1451068283691470970
@@ -391,4 +391,5 @@ async def finish_job(interaction: discord.Interaction, job_id: int):
 # 🚀 RUN BOT (เริ่มทำงาน)
 server_on() # เปิดเว็บ (myserver.py ที่รวม dashboard แล้ว)
 bot.run(os.getenv('TOKEN'))
+
 
